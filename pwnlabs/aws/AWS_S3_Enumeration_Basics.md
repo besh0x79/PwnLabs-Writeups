@@ -6,11 +6,11 @@ The site starts by providing a web link, and the visible URL indicates that it i
 
 The site begins by providing a link to a webpage that, upon opening, appears to be a completely ordinary webpage.
 
-![[Pasted image 20260916160939.png]]
+<img width="1920" height="1035" alt="image" src="https://github.com/user-attachments/assets/07c977a5-6498-41b3-aa24-26e9288fda58" />
 
 So, let's take a look at the page's source code.
 
-![[Pasted image 20260916161102.png]]
+<img width="1920" height="1035" alt="image" src="https://github.com/user-attachments/assets/36360bb8-e5d4-4aa5-9b1e-39f3ac13eeac" />
 
 ```html
 <meta charset="UTF-8">
@@ -22,7 +22,7 @@ Interestingly, it now appears to be using an S3 bucket named `dev.huge-logistics
 
 When I tried to play with that URL in the browser, I didn't find anything useful; everything just resulted in "access denied messages."
 
-![[Pasted image 20260916162414.png]]
+<img width="1920" height="1035" alt="image" src="https://github.com/user-attachments/assets/02417dbf-d900-4521-acb2-285a07621725" />
 
 So let's try using AWS CLI
 
@@ -40,7 +40,7 @@ Let's break it down:
 
 aws: is the tool name s3: is the name of the service that we want to interact with ls: is the action that we want to do (here we are listing the contents) --no-sign-request: means that the request is anonymous (think of it like the FTP anonymous login)
 
-![[Pasted image 20260916163748.png]]
+<img width="1877" height="299" alt="image" src="https://github.com/user-attachments/assets/a24902dd-aa9a-414a-b19b-f32438d7a0bf" />
 
 Here we go! My request succeeded, returning a list of the contents.
 
@@ -54,7 +54,7 @@ aws s3 ls s3://dev.huge-logistics.com/shared/ --no-sign-request
 
 Actually, I am permitted to see the content of the `/shared` folder only using the anonymous login.
 
-![[Pasted image 20260916164503.png]]
+<img width="1631" height="87" alt="image" src="https://github.com/user-attachments/assets/ffde364d-6db0-482f-bee9-2220fa04a828" />
 
 It has one zip file called `hi_migration_project.zip`. So let's get it on my machine:
 
@@ -66,7 +66,7 @@ Here we replaced `ls` with `cp` and you can observe its role.
 
 After unzipping the file, we see a PowerShell script.
 
-![[Pasted image 20260916165450.png]]
+<img width="1808" height="321" alt="image" src="https://github.com/user-attachments/assets/15d85ded-5977-4707-b6ee-6c2841ff3bd7" />
 
 Let's see what it hides:
 
@@ -212,8 +212,9 @@ You can consider the `accessKey` as a `username` and the `secretKey` as a `passw
 
 Now let's configure the AWS CLI to use these credentials instead of an anonymous connection.
 
-![[Pasted image 20260916182616.png]] ``
-
+<img width="1019" height="141" alt="image" src="https://github.com/user-attachments/assets/dfc824c6-4581-46e1-8e91-912ad806f05c" />
+ ``
+ 
 Now the AWS CLI has credentials.
 
 ```bash
@@ -222,19 +223,19 @@ aws sts get-caller-identity
 
 This is like `whoami`; it allows us to find out our execution context.
 
-![[Pasted image 20260916183016.png]]
+<img width="1218" height="178" alt="image" src="https://github.com/user-attachments/assets/215f7847-efc2-48a5-8809-cd0e8185c336" />
 
 The IAM user whose credentials we used is named `pam-test`.
 
 Now, let's try listing the contents of the paths that I couldn't see using the anonymous login: `/admin`, `/migration-files`.
 
-![[Pasted image 20260916184518.png]]
+<img width="1716" height="144" alt="image" src="https://github.com/user-attachments/assets/101d8d7c-1dbf-477b-ba25-c574e26c4d03" />
 
 In the `/admin` directory, I am able to see the content but I can't dump it.
 
 Let's try with `/migration-files`.
 
-![[Pasted image 20260916184740.png]]
+<img width="1874" height="209" alt="image" src="https://github.com/user-attachments/assets/34b741d9-ff2f-47e9-b794-82f3c5a70700" />
 
 ```plain
 2023-10-16 18:08:47          0 
@@ -253,7 +254,7 @@ Let's take a look at `test-export.xml`:
 aws s3 cp s3://dev.huge-logistics.com/migration-files/test-export.xml .
 ```
 
-![[Pasted image 20260916185516.png]]
+<img width="1247" height="556" alt="image" src="https://github.com/user-attachments/assets/4b702bb3-b236-46d3-b983-0836f032905e" />
 
 ```xml
 <CredentialEntry>
@@ -278,15 +279,15 @@ It seems that we now have the `AWS IT Admin` credentials.
 
 Now let's use `aws configure` again to set the new keys.
 
-![[Pasted image 20260916190009.png]]
+<img width="1150" height="158" alt="image" src="https://github.com/user-attachments/assets/6a5fcaf8-f89d-49f6-89c8-a71eefa5c4df" />
 
 and `aws sts get-caller-identity` reveals that we are the IAM user `it-admin` 
 
-![[Pasted image 20260916190134.png]]
+<img width="1285" height="188" alt="image" src="https://github.com/user-attachments/assets/ab4e325d-275c-4672-a4ad-b11f5e712914" />
 
 Let's now try to get the flag!
 
-![[Pasted image 20260916190302.png]]
+<img width="1620" height="124" alt="image" src="https://github.com/user-attachments/assets/d25cf4f7-374a-427b-891e-3f2afde0ff36" />
 
 Yep, and here we go! I could retrieve the flag.
 
