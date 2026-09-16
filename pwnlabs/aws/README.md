@@ -1,16 +1,16 @@
-Hello pwners This is my first writeup in the word of cloud penetration testing specifically AWS. My goal is to consolidate the knowledge I gained from this lab and to share that knowledge with others
+Hello pwners! This is my first writeup in the world of cloud penetration testing specifically AWS. My goal is to consolidate the knowledge I gained from this lab and to share that knowledge with others
 
-The goal of this lab is to teach us the initial phase of AWS penetration testing which is the  enumeration with a focus on S3 enumeration. If you are unfamiliar with S3, you should learn the fundamentals of AWS before proceeding.
+The goal of this lab is to teach us the initial phase of AWS penetration testing which is the enumeration with a focus on S3 enumeration. If you are unfamiliar with S3, you should learn the fundamentals of AWS before proceeding.
 
 The site starts by providing a web link, and the visible URL indicates that it is hosted on AWS.
 
 The site begins by providing a link to a webpage that, upon opening, appears to be a completely ordinary webpage.
 
-<img width="1920" height="1035" alt="image" src="https://github.com/user-attachments/assets/1cdbda4e-e2fc-4c52-91aa-0c0be66bd7ad" />
+![[Pasted image 20260916160939.png]]
 
 So, let's take a look at the page's source code.
 
-<img width="1920" height="1035" alt="image" src="https://github.com/user-attachments/assets/d36c750e-4f28-4bc2-8812-42cf40f0f415" />
+![[Pasted image 20260916161102.png]]
 
 ```html
 <meta charset="UTF-8">
@@ -22,32 +22,29 @@ Interestingly, it now appears to be using an S3 bucket named `dev.huge-logistics
 
 When I tried to play with that URL in the browser, I didn't find anything useful; everything just resulted in "access denied messages."
 
-<img width="1920" height="1035" alt="image" src="https://github.com/user-attachments/assets/7d2d1ff8-ae12-4bac-888d-43681971a49d" />
+![[Pasted image 20260916162414.png]]
 
-So lets try using AWS CLI
+So let's try using AWS CLI
 
 ```shell
 sudo apt install awscli
 ```
 
-After install it, come with me and lets see what we can do with it
+After installing it, come with me and let's see what we can do with it
 
 ```shell
 aws s3 ls s3://dev.huge-logistics.com --no-sign-request
 ```
 
-lets break it 
+Let's break it down:
 
-aws: is the tool name
-s3: is the name of the service that we want to interact with
-ls: is the action the we want to do (here we listing the contents)
---no-sign-request: means that the request is anonymous (think of it like the FTP anonymous login)
+aws: is the tool name s3: is the name of the service that we want to interact with ls: is the action that we want to do (here we are listing the contents) --no-sign-request: means that the request is anonymous (think of it like the FTP anonymous login)
 
-<img width="1877" height="299" alt="image" src="https://github.com/user-attachments/assets/79a3c8d1-a8ec-493f-9771-a808f85f1d7f" />
+![[Pasted image 20260916163748.png]]
 
-Here we go! my request is succeeded, returned with a list of the contents
+Here we go! My request succeeded, returning a list of the contents.
 
-we can now explore each one
+We can now explore each one.
 
 ```shell
 aws s3 ls s3://dev.huge-logistics.com/admin/ --no-sign-request
@@ -55,24 +52,23 @@ aws s3 ls s3://dev.huge-logistics.com/migration-files/ --no-sign-request
 aws s3 ls s3://dev.huge-logistics.com/shared/ --no-sign-request
 ```
 
-actually i am permitted to see the content of the `/shared` only using the anonymous login
+Actually, I am permitted to see the content of the `/shared` folder only using the anonymous login.
 
-<img width="1631" height="87" alt="image" src="https://github.com/user-attachments/assets/a06f08dc-7e78-49f2-9f80-13866dd44641" />
+![[Pasted image 20260916164503.png]]
 
-it has one zip file called `hi_migration_project.zip`
-so lets get it on my machine 
+It has one zip file called `hi_migration_project.zip`. So let's get it on my machine:
 
 ```shell
 aws s3 cp s3://dev.huge-logistics.com/shared/hl_migration_project.zip . --no-sign-request
 ```
 
-here we replaced the `ls` with `cp` and u can observe its role
+Here we replaced `ls` with `cp` and you can observe its role.
 
-after unzip the file we see a PowerShell script
+After unzipping the file, we see a PowerShell script.
 
-<img width="1808" height="321" alt="image" src="https://github.com/user-attachments/assets/ef9219bb-46ac-45ea-a38f-6dd6e0192895" />
+![[Pasted image 20260916165450.png]]
 
-lets see what it hides 
+Let's see what it hides:
 
 ```powershell
 # AWS Configuration
@@ -199,7 +195,7 @@ Write-Output "Batch upload complete!"
 # .\migrate_secrets.ps1
 ```
 
-wow!, the script contains hardcoded AWS keys
+Wow! The script contains hardcoded AWS keys.
 
 ```powershell
 # AWS Configuration
@@ -212,35 +208,33 @@ $region = "us-east-1"
 
 ```
 
-you can consider the `accessKey` as a `username` and the `secretKey` as a `password`
+You can consider the `accessKey` as a `username` and the `secretKey` as a `password`.
 
-Now lets configure the AWS CLI to use this creds instead of anonymous connection
+Now let's configure the AWS CLI to use these credentials instead of an anonymous connection.
 
-<img width="1019" height="141" alt="image" src="https://github.com/user-attachments/assets/b5b41a21-ffc2-46f9-a7b0-bfc9ef3b2bd9" />
-``
+![[Pasted image 20260916182616.png]] ``
 
-now AWS CLI has credentials
+Now the AWS CLI has credentials.
 
 ```bash
 aws sts get-caller-identity
 ```
 
-this is like `whoami`, it is allow us to  find out our execution context 
+This is like `whoami`; it allows us to find out our execution context.
 
-<img width="1218" height="178" alt="image" src="https://github.com/user-attachments/assets/73d05563-1c39-419b-bb92-5fb003d66f42" />
+![[Pasted image 20260916183016.png]]
 
-the IAM User that we used its creds is named `pam-test`
+The IAM user whose credentials we used is named `pam-test`.
 
-Now, let's try listing the content the paths that i couldn't see using the anonymous login. `/admin`, `/migration-files`
+Now, let's try listing the contents of the paths that I couldn't see using the anonymous login: `/admin`, `/migration-files`.
 
-<img width="1716" height="144" alt="image" src="https://github.com/user-attachments/assets/03ea5f57-ed0b-47b9-830f-dac2e08d51a2" />
+![[Pasted image 20260916184518.png]]
 
-in the `/admin` i am able to see the content but i can't to dump it
+In the `/admin` directory, I am able to see the content but I can't dump it.
 
-lets try with `/migration-files`
+Let's try with `/migration-files`.
 
-
-<img width="1874" height="209" alt="image" src="https://github.com/user-attachments/assets/e340b8a6-7734-4d88-b5c7-7554f03fc0ee" />
+![[Pasted image 20260916184740.png]]
 
 ```plain
 2023-10-16 18:08:47          0 
@@ -251,15 +245,15 @@ lets try with `/migration-files`
 
 ```
 
-in the `migration-files` directory i am able to see and download the files
+In the `migration-files` directory, I am able to see and download the files.
 
-lets take a look at `test-export.xml`
+Let's take a look at `test-export.xml`:
 
 ```bash
 aws s3 cp s3://dev.huge-logistics.com/migration-files/test-export.xml .
 ```
 
-<img width="1247" height="556" alt="image" src="https://github.com/user-attachments/assets/3f50cd33-deb0-4e2e-b221-7f0b32b63cc0" />
+![[Pasted image 20260916185516.png]]
 
 ```xml
 <CredentialEntry>
@@ -280,18 +274,20 @@ aws s3 cp s3://dev.huge-logistics.com/migration-files/test-export.xml .
 
 Wow again!
 
-It is seem that we now have the `AWS IT Admin` creds
+It seems that we now have the `AWS IT Admin` credentials.
 
-now we use Use `aws configure`  again to set the new keys
+Now let's use `aws configure` again to set the new keys.
 
-<img width="1150" height="158" alt="image" src="https://github.com/user-attachments/assets/092d8b7e-c795-447f-9ad3-56ee0fb0fd7f" />
+![[Pasted image 20260916190009.png]]
 
 and `aws sts get-caller-identity` reveals that we are the IAM user `it-admin` 
 
-<img width="1285" height="188" alt="image" src="https://github.com/user-attachments/assets/3f7763a7-8d65-4c38-af52-a76124c11d0a" />
+![[Pasted image 20260916190134.png]]
 
-Lets now try to get the damn flag
+Let's now try to get the flag!
 
-<img width="1620" height="124" alt="image" src="https://github.com/user-attachments/assets/9e035eb6-5233-45bc-9a03-2592fac3493c" />
+![[Pasted image 20260916190302.png]]
 
-Yep, and here we go! i could retreve the flag
+Yep, and here we go! I could retrieve the flag.
+
+And that's a wrap, pwners!, one misconfigured bucket was all it took to go from anonymous to IT Admin. Stay curious, keep enumerating!
